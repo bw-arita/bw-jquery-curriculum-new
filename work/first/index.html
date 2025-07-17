@@ -74,7 +74,12 @@
             'marginTop': 100
       }, 2000);
     });
-
+// 第6問  id='q6'の子要素をクリックしたら、その要素のインデックス（何番目か）をconsole.log()とalert()を用いて表示させよ。
+    $('#q6').find('li').click(function() {
+      var targetNum = $(this).index();
+      console.log(targetNum);
+      alert(targetNum);
+    });
     });
 </script>
 </body>
