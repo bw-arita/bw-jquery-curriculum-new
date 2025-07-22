@@ -63,14 +63,18 @@
       // ※必ずレビュー前に上記挙動が問題ないか確認すること
 $(function () {
   const list = $('.menu__list > li');
-  list.hover(
-    function () {
-      $(this).children('.menu__list__childList').stop(true, true).slideDown();
-    },
-    function () {
-      $(this).children('.menu__list__childList').stop(true, true).slideUp();
+  list.on('mouseenter', function () {
+    const child = $(this).children('.menu__list__childList');
+    if (!child.is(':visible')) {
+      child.stop(true, true).slideDown();
     }
-  );
+  });
+  list.on('mouseleave', function () {
+    const child = $(this).children('.menu__list__childList');
+    if (child.is(':visible')) {
+      child.stop(true, true).slideUp();
+    }
+  });
 });
     </script>
   </body>
