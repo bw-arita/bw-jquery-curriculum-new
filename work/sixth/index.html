@@ -1,21 +1,110 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="../../common/css/reset.css">
-  <link rel="stylesheet" href="../../common/css/base.css">
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../../common/css/reset.css" />
+  <link rel="stylesheet" href="../../common/css/base.css" />
+  <link rel="stylesheet" href="./css/style.css" />
   <title>Document</title>
 </head>
 <body>
   <div class="wrapper" id="wrapper">
     <button type="button" class="btn search-btn" id="pokemon_search">ポケモンを探す</button>
   </div>
+
   <script src="../../common/js/jquery.js"></script>
   <script>
-    // 回答はここに書いてね
+    (function() {
+      const $wrapper = $('#wrapper');
+
+// 「捕まえる」失敗時の画面表示（テンプレ固定）
+      const failHtml = `
+        <p class="text">逃げられてしまった...</p>
+        <button class="btn mt" data-js="reset">戻る</button>
+      `;
+
+// 「ポケモンを探す」後の画面表示（テンプレ固定）
+      const encountHtml = `
+        <p class="name"></p>
+        <div>
+          <img class="img" src="" alt="" />
+        </div>
+        <div>
+          <button class="btn" id="catch">捕まえる</button>
+          <button class="btn" data-js="reset">逃げる</button>
+        </div>
+      `;
+
+// 「捕まえる」成功時の画面表示（テンプレ固定）
+      const doneHtml = `
+        <p class="name">ゲットしました</p>
+        <div>
+          <img class="img" src="" alt="" />
+        </div>
+        <button class="btn" data-js="reset">戻る</button>
+      `;
+
+      let currentPokemonName = '';
+
+ // 1) 「ポケモンを探す」クリック
+      $(document).on('click', '#pokemon_search', function() {
+        const id = Math.floor(Math.random() * 151) + 1;
+
+ // pokemon と species API を同時に叩く
+        const pokemonReq = $.ajax({
+          url: `https://pokeapi.co/api/v2/pokemon/${id}`,
+          method: 'GET'
+        });
+
+        const speciesReq = $.ajax({
+          url: `https://pokeapi.co/api/v2/pokemon-species/${id}`,
+          method: 'GET'
+        });
+
+ // 両方のレスポンスを受け取ってから描画
+        $.when(pokemonReq, speciesReq).done(function(pokemonArr, speciesArr) {
+          const pokemon = pokemonArr[0];
+          const species = speciesArr[0];
+
+// 日本語名を探す
+          const ja = species.names.find(n => n.language.name === 'ja-Hrkt');
+          currentPokemonName = ja ? ja.name : pokemon.name;
+
+ // 画面表示
+          $wrapper.html(encountHtml);
+          $wrapper.find('.img')
+            .attr('src', pokemon.sprites.front_default)
+            .attr('alt', currentPokemonName);
+          $wrapper.find('.name').text(currentPokemonName);
+        });
+      });
+
+// 2) 「捕まえる」クリック（50% 成功/失敗）
+      $(document).on('click', '#catch', function() {
+        const isSuccess = Math.random() < 0.5;
+
+        if (isSuccess) {
+          $.ajax({
+            url: 'https://pokeapi.co/api/v2/item/4',
+            method: 'GET'
+          }).done(function(item) {
+            $wrapper.html(doneHtml);
+            $wrapper.find('.img')
+              .attr('src', item.sprites.default)
+              .attr('alt', 'モンスターボール');
+          });
+        } else {
+          $wrapper.html(failHtml);
+        }
+      });
+
+// 3) 「戻る / 逃げる」クリック → 最初の画面に戻す
+      $(document).on('click', '[data-js="reset"]', function() {
+        $wrapper.html('<button type="button" class="btn search-btn" id="pokemon_search">ポケモンを探す</button>');
+      });
+    })();
   </script>
 </body>
 </html>
